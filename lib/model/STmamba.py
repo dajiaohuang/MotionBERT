@@ -442,21 +442,21 @@ def create_block(
 
 from dataclasses import dataclass, field
 
-class DSTformer(nn.Module):
+class STMamba(nn.Module):
     def __init__(self, dim_in=3, dim_out=3, dim_feat=256, dim_rep=512,
                  depth=5, 
                  num_joints=17, maxlen=243, 
-                 qkv_bias=True, qk_scale=None, drop_rate=0., attn_drop_rate=0., drop_path_rate=0., 
+                 drop_rate=0.,
                  norm_layer=nn.LayerNorm, att_fuse=True,
                  ssm_cfg: dict = field(default_factory=dict),
                  rms_norm: bool = True, residual_in_fp32: bool = True ,fused_add_norm: bool = True,
-                 pad_vocab_size_multiple: int = 8,tie_embeddings: bool = True):
+                 ):
         super().__init__()
         self.dim_out = dim_out
         self.dim_feat = dim_feat
         self.joints_embed = nn.Linear(dim_in, dim_feat)
         self.pos_drop = nn.Dropout(p=drop_rate)
-        dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
+        # dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         
         self.blocks_st = nn.ModuleList([
