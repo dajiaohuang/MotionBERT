@@ -540,7 +540,8 @@ class STmamba(nn.Module):
         #         x = x_st * alpha[:,:,0:1] + x_ts * alpha[:,:,1:2]
         #     else:
         #         x = (x_st + x_ts)*0.5
-        for block in self.blocks: x= block(x)
+        res = None
+        for block in self.blocks: x,res= block(x,res)
         x = self.norm(x)
         x = x.reshape(B, F, J, -1)
         x = self.pre_logits(x)         # [B, F, J, dim_feat]
