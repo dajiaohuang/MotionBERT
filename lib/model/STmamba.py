@@ -442,7 +442,7 @@ def create_block(
 
 from dataclasses import dataclass, field
 
-class STMamba(nn.Module):
+class STmamba(nn.Module):
     def __init__(self, dim_in=3, dim_out=3, dim_feat=256, dim_rep=512,
                  depth=5, 
                  num_joints=17, maxlen=243, 
