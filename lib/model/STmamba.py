@@ -447,7 +447,7 @@ class STMamba(nn.Module):
                  depth=5, 
                  num_joints=17, maxlen=243, 
                  drop_rate=0.,
-                 norm_layer=nn.LayerNorm, att_fuse=True,
+                 norm_layer=nn.LayerNorm, att_fuse=False,
                  ssm_cfg: dict = field(default_factory=dict),
                  rms_norm: bool = True, residual_in_fp32: bool = True ,fused_add_norm: bool = True,
                  ):
