@@ -9,7 +9,7 @@ from functools import partial
 from itertools import repeat
 from lib.model.drop import DropPath
 from torch import Tensor
-
+from typing import Optional
 from einops import rearrange, repeat
 
 from mamba_ssm.ops.selective_scan_interface import selective_scan_fn, mamba_inner_fn
