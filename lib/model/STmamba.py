@@ -448,7 +448,8 @@ class STmamba(nn.Module):
                  num_joints=17, maxlen=243, 
                  drop_rate=0.,
                  norm_layer=nn.LayerNorm, att_fuse=False,
-                 ssm_cfg: dict = field(default_factory=dict),
+                #  ssm_cfg: dict = field(default_factory=dict),
+                 ssm_cfg:dict = {},
                  rms_norm: bool = True, residual_in_fp32: bool = True ,fused_add_norm: bool = True,
                  ):
         super().__init__()
