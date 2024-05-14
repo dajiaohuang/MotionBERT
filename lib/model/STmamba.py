@@ -527,16 +527,14 @@ class STmamba(nn.Module):
         x = x.reshape(B, F, J, -1)
         
         
-        x = x.transpose(1, 2) # B, J, F, C
-        B,J,F,C = x.shape
-        x = x.reshape(-1, F, C)
+        x = x.permute(0, 2, 1, 3)  # B, F, J, C -> B, J, F, C
+        x = x.reshape(B * J, F, C)
         
         res =None
         for block in self.blocks_s:
             x,res=block(x,res)
-        x= self.norm2(x)
-        x.reshape(B,J,F,-1)
-        x = x.transpose(1, 2)
+        x = x.reshape(B, J, F, -1)
+        x = x.permute(0, 2, 1, 3)
         
         x = self.pre_logits(x)         # [B, F, J, dim_feat]
         if return_rep:
