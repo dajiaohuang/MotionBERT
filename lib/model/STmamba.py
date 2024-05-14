@@ -541,7 +541,8 @@ class STmamba(nn.Module):
                     x, res
                     )
                 x_b,res_b = self.blocks_s[i * 2 + 1](
-                    x.flip([1]), res.flip([1]) if res else None
+                    x.flip([1]), 
+                    None if res == None else res.flip([1])
                     )
                 x = x_f + x_b.flip([1])
                 res = res_f + res_b.flip([1])
@@ -549,8 +550,9 @@ class STmamba(nn.Module):
             res = None
             for block in self.blocks_s:
                 x,res=block(x,res)
-            x = x.reshape(B, J, F, -1)
-            x = x.permute(0, 2, 1, 3)
+                
+        x = x.reshape(B, J, F, -1)
+        x = x.permute(0, 2, 1, 3)
         
         
         x = self.pre_logits(x)         # [B, F, J, dim_feat]
