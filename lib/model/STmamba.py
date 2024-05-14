@@ -536,7 +536,7 @@ class STmamba(nn.Module):
         
         if self.if_bidirectional:
             res = None
-            for i in range(len(self.blocks_s)):
+            for i in range(len(self.blocks_s)//2):
                 x_f,res_f = self.blocks_s[i * 2](
                     x, res
                     )
