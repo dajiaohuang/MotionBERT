@@ -442,9 +442,9 @@ def create_block(
 
 from dataclasses import dataclass, field
 
-class STmamba(nn.Module):
+class Tmamba(nn.Module):
     def __init__(self, dim_in=3, dim_out=3, dim_feat=256, dim_rep=512,
-                 depth=8, 
+                 depth=5, 
                  num_joints=17, maxlen=243, 
                  drop_rate=0.,
                  norm_layer=nn.LayerNorm, att_fuse=False,
@@ -463,15 +463,26 @@ class STmamba(nn.Module):
         self.blocks_t = nn.ModuleList([
             create_block(d_model=dim_feat,ssm_cfg=ssm_cfg,rms_norm=rms_norm,residual_in_fp32=residual_in_fp32,
                          fused_add_norm=fused_add_norm,layer_idx=i,device=self.device)
-            for i in range(depth//2)])
+            for i in range(depth)])
         
-        self.blocks_s = nn.ModuleList([
-            create_block(d_model=dim_feat,ssm_cfg=ssm_cfg,rms_norm=rms_norm,residual_in_fp32=residual_in_fp32,
-                         fused_add_norm=fused_add_norm,layer_idx=i,device=self.device)
-            for i in range(depth//2)])
         
-        self.norm1 = norm_layer(dim_feat)
-        self.norm2 = norm_layer(dim_feat)
+        # self.blocks_st = nn.ModuleList([
+        #     # Block(
+        #     #     dim=dim_feat, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale,
+        #     #     drop=drop_rate, attn_drop=attn_drop_rate, drop_path=dpr[i], norm_layer=norm_layer, 
+        #     #     st_mode="stage_st")
+        #     create_block(d_model=dim_feat,ssm_cfg=ssm_cfg,rms_norm=rms_norm,residual_in_fp32=residual_in_fp32,
+        #                  fused_add_norm=fused_add_norm,layer_idx=i,device=self.device)
+        #     for i in range(depth)])
+        # self.blocks_ts = nn.ModuleList([
+        #     # Block(
+        #     #     dim=dim_feat, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale,
+        #     #     drop=drop_rate, attn_drop=attn_drop_rate, drop_path=dpr[i], norm_layer=norm_layer, 
+        #     #     st_mode="stage_ts")
+        #     create_block(d_model=dim_feat,ssm_cfg=ssm_cfg,rms_norm=rms_norm,residual_in_fp32=residual_in_fp32,
+        #                  fused_add_norm=fused_add_norm,layer_idx=i,device=self.device)
+        #     for i in range(depth)])
+        self.norm = norm_layer(dim_feat)
         if dim_rep:
             self.pre_logits = nn.Sequential(OrderedDict([
                 ('fc', nn.Linear(dim_feat, dim_rep)),
@@ -519,23 +530,23 @@ class STmamba(nn.Module):
         x = x.reshape(BF, J, C)
         x = self.pos_drop(x)
         alphas = []
-        
+        # for idx, (blk_st, blk_ts) in enumerate(zip(self.blocks_st, self.blocks_ts)):
+        #     x_st = blk_st(x, F)
+        #     x_ts = blk_ts(x, F)
+        #     if self.att_fuse:
+        #         att = self.ts_attn[idx]
+        #         alpha = torch.cat([x_st, x_ts], dim=-1)
+        #         BF, J = alpha.shape[:2]
+        #         alpha = att(alpha)
+        #         alpha = alpha.softmax(dim=-1)
+        #         x = x_st * alpha[:,:,0:1] + x_ts * alpha[:,:,1:2]
+        #     else:
+        #         x = (x_st + x_ts)*0.5
         res = None
         for block in self.blocks_t: 
             x,res= block(x,res)
-        x = self.norm1(x)
+        x = self.norm(x)
         x = x.reshape(B, F, J, -1)
-        
-        x = x.transpose(1, 2)  # B, J, F, C
-        x = x.reshape(B*J, F, C)
-        
-        res =None
-        for block in self.blocks_s:
-            x,res=block(x,res)
-        x= self.norm2(x)
-        x.reshape(B,J,F,-1)
-        x = x.transpose(1, 2)
-        
         x = self.pre_logits(x)         # [B, F, J, dim_feat]
         if return_rep:
             return x
