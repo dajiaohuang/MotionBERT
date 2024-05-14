@@ -526,8 +526,10 @@ class STmamba(nn.Module):
         x = self.norm1(x)
         x = x.reshape(B, F, J, -1)
         
-        x = x.transpose(1, 2)  # B, J, F, C
-        x = x.reshape(B*J, F, C)
+        
+        x = x.transpose(1, 2) # B, J, F, C
+        B,J,F,C = x.shape
+        x = x.reshape(-1, F, C)
         
         res =None
         for block in self.blocks_s:
