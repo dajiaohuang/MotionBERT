@@ -5,7 +5,8 @@ finetune: False
 partial_train: null
 backbone: STmamba
 
-# Traning 
+
+# Training 
 epochs: 90
 checkpoint_frequency: 30
 batch_size: 16
@@ -23,6 +24,8 @@ depth: 8
 dim_rep: 512
 # num_heads: 8
 att_fuse: False
+if_bidirectional: False
+
 
 
 # Data

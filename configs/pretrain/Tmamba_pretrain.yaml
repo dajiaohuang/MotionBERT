@@ -5,7 +5,7 @@ finetune: False
 partial_train: null
 backbone: Tmamba
 
-# Traning 
+# Training 
 epochs: 90
 checkpoint_frequency: 30
 batch_size: 16
