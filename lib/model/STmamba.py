@@ -451,10 +451,12 @@ class STmamba(nn.Module):
                 #  ssm_cfg: dict = field(default_factory=dict),
                  ssm_cfg:dict = {},
                  rms_norm: bool = True, residual_in_fp32: bool = True ,fused_add_norm: bool = True,
+                 if_bidirectional=False,
                  ):
         super().__init__()
         self.dim_out = dim_out
         self.dim_feat = dim_feat
+        self.if_bidirectional= if_bidirectional
         self.joints_embed = nn.Linear(dim_in, dim_feat)
         self.pos_drop = nn.Dropout(p=drop_rate)
         # dpr = [x.item() for x in torch.linspace(0, drop_path_rate, depth)]  # stochastic depth decay rule
@@ -491,6 +493,8 @@ class STmamba(nn.Module):
             for i in range(depth):
                 self.ts_attn[i].weight.data.fill_(0)
                 self.ts_attn[i].bias.data.fill_(0.5)
+                
+        
 
     def _init_weights(self, m):
         if isinstance(m, nn.Linear):
@@ -530,11 +534,24 @@ class STmamba(nn.Module):
         x = x.permute(0, 2, 1, 3)  # B, F, J, C -> B, J, F, C
         x = x.reshape(B * J, F, C)
         
-        res =None
-        for block in self.blocks_s:
-            x,res=block(x,res)
-        x = x.reshape(B, J, F, -1)
-        x = x.permute(0, 2, 1, 3)
+        if self.if_bidirectional:
+            res = None
+            for i in range(len(self.blocks_s)):
+                x_f,res_f = self.blocks_s[i * 2](
+                    x, res
+                    )
+                x_b,res_b = self.blocks_s[i * 2 + 1](
+                    x.flip([1]), res.flip([1]) if res else None
+                    )
+                x = x_f + x_b.flip([1])
+                res = res_f + res_b.flip([1])
+        else:
+            res = None
+            for block in self.blocks_s:
+                x,res=block(x,res)
+            x = x.reshape(B, J, F, -1)
+            x = x.permute(0, 2, 1, 3)
+        
         
         x = self.pre_logits(x)         # [B, F, J, dim_feat]
         if return_rep:
